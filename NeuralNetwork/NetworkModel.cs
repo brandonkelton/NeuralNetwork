@@ -8,11 +8,12 @@ namespace NeuralNetwork
     public class NetworkModel
     {
         public static double LearningRate { get; set; } = 0.01;
-       
+        public static double Momentum { get; set; } = 1;
 
         public int Epochs { get; private set; }
         public List<NeuralLayer> Layers { get; private set; } = new List<NeuralLayer>();
         public double Cost { get; private set; }
+        public double Accuracy { get; private set; }
 
 
         private List<double> _expectedOutputs = null;
@@ -85,10 +86,10 @@ namespace NeuralNetwork
 
             // Add dendrites to the first layer according to the number of inputs,
             // but only if dendrites do not yet exist. An interesting twist on this
-            // might be to allow the inputs to vary so, say, different images sizes
+            // might be to allow the inputs to vary so, say, different image sizes
             // could be passed in. Not sure how well that would work, and it would
             // require some changes to the existing code (weights, biases handled at
-            // network model level rather than Dendrite instantiation).
+            // network model level rather than Neuron instantiation).
             var firstLayer = Layers.First();
             if (firstLayer.Neurons.Sum(n => n.Dendrites.Count()) < 1)
             {
@@ -137,7 +138,7 @@ namespace NeuralNetwork
             }
         }
 
-        public void Train()
+        public void Train(DataGroup trainGroup)
         {
 
         }
