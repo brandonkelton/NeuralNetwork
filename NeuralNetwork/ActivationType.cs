@@ -4,8 +4,11 @@ using System.Text;
 
 namespace NeuralNetwork
 {
-    public class Dendrite
+    public enum ActivationType
     {
-        public Pulse Input { get; set; }
+        Sigmoid,
+        Tanh,
+        Relu,
+        LeakyRelu
     }
 }
