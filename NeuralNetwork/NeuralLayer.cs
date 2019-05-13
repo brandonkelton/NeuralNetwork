@@ -8,58 +8,32 @@ namespace NeuralNetwork
     {
         public List<Neuron> Neurons { get; private set; } = new List<Neuron>();
         public ActivationType ActivationType { get; private set; }
-        public double LearningRate { get; private set; }
         public bool IsOutputLayer { get; private set; }
 
 
         public NeuralLayer(
             int neuronCount,
             ActivationType activationType = ActivationType.Relu,
-            double learningRate = 0.01,
             double? bias = null,
             double? weight = null, 
             bool isOutputLayer = false)
         {
             ActivationType = activationType;
             IsOutputLayer = isOutputLayer;
-            LearningRate = learningRate;
 
             for (int i = 0; i < neuronCount; i++)
             {
-                Neurons.Add(new Neuron(ActivationType, LearningRate, bias, weight));
+                Neurons.Add(new Neuron(ActivationType, bias, weight));
             }
         }
 
-        //public double Weight { get; private set; }
-
-        //public NeuralLayer(int layerLevel, double initialWeight, int count)
-        //{
-        //    LayerLevel = layerLevel;
-        //    Weight = initialWeight;
-
-        //    for (int i=0; i<count; i++)
-        //    {
-        //        Neurons.Add(new Neuron());
-        //    }
-        //}
-
-        //public void Optimize(double learningRate, double delta)
-        //{
-        //    Weight += learningRate * delta;
-        //    foreach (var neuron in Neurons)
-        //    {
-        //        neuron.UpdateWeights(Weight);
-        //    }
-        //}
-
-        public NeuralLayer(int neuronCount, ActivationType activationType, double learningRate)
+        public NeuralLayer(int neuronCount, ActivationType activationType = ActivationType.Relu)
         {
             ActivationType = activationType;
-            LearningRate = learningRate;
 
             for (int i=0; i<neuronCount; i++)
             {
-                Neurons.Add(new Neuron(activationType, learningRate));
+                Neurons.Add(new Neuron(activationType));
             }
         }
 

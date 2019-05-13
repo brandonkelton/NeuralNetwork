@@ -7,18 +7,29 @@ namespace NeuralNetwork
 {
     public class NetworkModel
     {
-        public float LearningRate { get; private set; }
+        public static double LearningRate { get; set; } = 0.01;
+       
+
         public int Epochs { get; private set; }
         public List<NeuralLayer> Layers { get; private set; } = new List<NeuralLayer>();
+        public double Cost { get; private set; }
+
 
         private List<double> _expectedOutputs = null;
 
-        public double Cost { get; private set; }
-
-        public NetworkModel(float learningRate = 0.01f, int epochs = 10)
+        public NetworkModel(int epochs = 10)
         {
-            LearningRate = learningRate;
             Epochs = epochs;
+        }
+
+        public void AddLayer(
+            int neuronCount,
+            ActivationType activationType = ActivationType.Relu,
+            double? bias = null,
+            double? weight = null)
+        {
+            var layer = new NeuralLayer(neuronCount, activationType, bias, weight);
+            AddLayer(layer);
         }
 
         public void AddLayer(NeuralLayer layer)
@@ -34,14 +45,17 @@ namespace NeuralNetwork
             }
 
             var currentLastLayer = Layers.Last();
+
+            if (currentLastLayer.IsOutputLayer)
+                throw new Exception("Output layer is already assigned");
+
             foreach (var newLayerNeuron in layer.Neurons)
             {
                 foreach (var lastLayerNeuron in currentLastLayer.Neurons)
                 {
                     // Each neuron in the new layer is assigned a dendrite
                     // corresponding to each neuron's output in the layer before.
-                    var newLayerNeuronDendrite = new Dendrite();
-                    newLayerNeuronDendrite.Input = lastLayerNeuron.Output;
+                    var newLayerNeuronDendrite = new Dendrite { Input = lastLayerNeuron.Output };
                     newLayerNeuron.Dendrites.Add(newLayerNeuronDendrite);
                 }
             }
@@ -54,7 +68,7 @@ namespace NeuralNetwork
             double? weight = null)
         {
             _expectedOutputs = new List<double>(expectedOutputs);
-            var finalLayer = new NeuralLayer(expectedOutputs.Count(), activationType, LearningRate, bias, weight, true);
+            var finalLayer = new NeuralLayer(expectedOutputs.Count(), activationType, bias, weight, true);
             AddLayer(finalLayer);
         }
 
@@ -64,56 +78,6 @@ namespace NeuralNetwork
             _expectedOutputs.CopyTo(expectedOutputs);
             return expectedOutputs.ToList();
         }
-
-        //public void CreateNetwork(NeuralLayer layerFrom, NeuralLayer layerTo)
-        //{
-        //    foreach (var neuronFrom in layerFrom.Neurons)
-        //    {
-        //        foreach (var neuronTo in layerTo.Neurons)
-        //        {
-        //            var dendrite = new Dendrite
-        //            {
-        //                Input = neuronFrom.Output,
-        //                Weight = layerTo.Weight
-        //            };
-        //            neuronTo.Dendrites.Add(dendrite);
-        //        }
-        //    }
-        //}
-
-        //public void Build()
-        //{
-        //    if (Layers.Count < 2) return;
-
-        //    for (int i=0; i<(i-1); i++)
-        //    {
-        //        CreateNetwork(Layers[i], Layers[i + 1]);
-        //    }
-        //}
-
-        //private void ComputeOutput()
-        //{
-        //    if (Layers.Count < 2) return;
-
-        //    var layers = Layers.Skip(1).ToList();
-        //    foreach (var layer in layers)
-        //    {
-        //        layer.Forward();
-        //    }
-        //}
-
-        // should use back propagation instead
-        //private void OptimizeWeights(double accuracy)
-        //{
-        //    if (accuracy == 1) return;
-
-        //    // var rate = accuracy > 1 ? -LearningRate : LearningRate;
-        //    foreach (var layer in Layers)
-        //    {
-        //        layer.Optimize(LearningRate, 1);
-        //    }
-
-        //}
 
         public void FeedForward(double[] inputs)
         {
@@ -164,10 +128,9 @@ namespace NeuralNetwork
             }
             Cost /= 2;
 
-            // Teach last layer
             lastLayer.Learn(expectedOutput);            
 
-            // Teach all other layers, which is based on the last layer's learning
+            // Teach all other layers, each based on the previous layer
             for (int i=Layers.Count - 2; i>0; i--)
             {
                 Layers[i].Learn(Layers[i + 1]);

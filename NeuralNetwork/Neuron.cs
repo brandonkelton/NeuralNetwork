@@ -6,22 +6,20 @@ namespace NeuralNetwork
 {
     public class Neuron
     {
-        private static Random Generator = new Random();
-
         public List<Dendrite> Dendrites { get; set; } = new List<Dendrite>();
         public ActivationType ActivationType { get; private set; }
-        public double LearningRate { get; private set; }
         public double Gamma { get; set; }
-        public bool CanLearn { get; set; }
         public double Weight { get; set; }
         public double Bias { get; set; }
         public Pulse Output { get; set; } = new Pulse();
 
 
-        public Neuron(ActivationType activationType, double learningRate, double? bias = null, double? weight = null)
+        private static readonly Random _generator = new Random();
+
+
+        public Neuron(ActivationType activationType, double? bias = null, double? weight = null)
         {
             ActivationType = activationType;
-            LearningRate = learningRate;
 
             if (bias.HasValue)
             {
@@ -30,8 +28,8 @@ namespace NeuralNetwork
             else
             {
                 // Produces a random number between -0.5 and 0.5
-                Bias = (Generator.NextDouble() > 0.5 ? 1 : -1) *
-                Generator.NextDouble() * 0.5;
+                Bias = (_generator.NextDouble() > 0.5 ? 1 : -1) *
+                _generator.NextDouble() * 0.5;
             }
 
             if (weight.HasValue)
@@ -41,8 +39,8 @@ namespace NeuralNetwork
             else
             {
                 // Produces a random number between -0.5 and 0.5
-                Weight = (Generator.NextDouble() > 0.5 ? 1 : -1) *
-                    Generator.NextDouble() * 0.5;
+                Weight = (_generator.NextDouble() > 0.5 ? 1 : -1) *
+                    _generator.NextDouble() * 0.5;
             }
         }
 
@@ -55,9 +53,8 @@ namespace NeuralNetwork
 
         public void UpdateWeightsAndBiases()
         {
-            if (!CanLearn) return;
-            Bias -= Gamma * LearningRate;
-            Weight -= Gamma * Output.Value * LearningRate;
+            Bias -= Gamma * NetworkModel.LearningRate;
+            Weight -= Gamma * Output.Value * NetworkModel.LearningRate;
         }
 
         private double GetCoalescedSignal()
