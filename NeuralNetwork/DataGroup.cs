@@ -6,16 +6,18 @@ namespace NeuralNetwork
 {
     public class DataGroup
     {
+        public double[] LabelList { get; private set; }
         public List<double[]> Values { get; private set; }
-        public List<double> Labels { get; private set; }
+        public double[] ValueLabels { get; private set; }
 
-        public DataGroup(IList<double[]> values, IList<double> labels)
+        public DataGroup(double[] labelList, IList<double[]> values, double[] valueLabels)
         {
-            if (values.Count != labels.Count)
+            if (values.Count != valueLabels.Length)
                 throw new Exception("Labels do not match values");
 
+            LabelList = labelList;
             Values = new List<double[]>(values);
-            Labels = new List<double>(labels);
+            ValueLabels = valueLabels;
         }
     }
 }

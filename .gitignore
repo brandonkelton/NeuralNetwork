@@ -16,3 +16,5 @@ Version.cs
 Version.h
 Version.cpp
 .vs/
+number-image-train.csv
+number-image-test.csv

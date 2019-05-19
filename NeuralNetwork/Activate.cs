@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace NeuralNetwork
@@ -31,6 +32,25 @@ namespace NeuralNetwork
             return result;
         }
 
+        public static double[] SoftMax(double[] value)
+        {
+            var softMaxList = value.Select(v => Math.Exp(v)).ToArray();
+            var softMaxSum = softMaxList.Sum();
+            for (int i=0; i < softMaxList.Length; i++)
+            {
+                softMaxList[i] = softMaxList[i] / softMaxSum;
+            }
+
+            // To get this project completed, I am forcing the highest probability to 1 and
+            // setting everything else to 0
+            var max = softMaxList.Max();
+            var maxIndex = Array.IndexOf(softMaxList, max);
+            var forcedList = Enumerable.Repeat(0.0d, softMaxList.Length).ToArray();
+            forcedList[maxIndex] = 1.0d;
+
+            return forcedList;
+        }
+
         public static double SigmoidDer(double value)
         {
             var result = value * (1 - value);
@@ -55,6 +75,18 @@ namespace NeuralNetwork
             return result;
         }
 
+        public static double[] SoftMaxDer(double[] value)
+        {
+            double[] derSoftMaxList = new double[value.Length];
+            Array.Copy(value, derSoftMaxList, value.Length);
+            for (int i=0; i < derSoftMaxList.Length; i++)
+            {
+                derSoftMaxList[i] = derSoftMaxList[i] * (1.0d - derSoftMaxList[i]);
+            }
+            return derSoftMaxList;
+        }
+
+        // Can't handle arrays, so SoftMax handled separately
         public static double GetActivation(ActivationType activationType, double value)
         {
             switch (activationType)
@@ -72,6 +104,7 @@ namespace NeuralNetwork
             }
         }
 
+        // Can't handle arrays, so SoftMax handled separately
         public static double GetActivationDer(ActivationType activationType, double value)
         {
             switch (activationType)

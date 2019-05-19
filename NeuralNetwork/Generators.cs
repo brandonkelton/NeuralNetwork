@@ -4,12 +4,8 @@ using System.Text;
 
 namespace NeuralNetwork
 {
-    public enum ActivationType
+    public static class Generators
     {
-        Sigmoid,
-        Tanh,
-        Relu,
-        LeakyRelu,
-        SoftMax
+        public static readonly Random RandomGenerator = new Random();
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace NeuralNetwork
@@ -8,26 +9,8 @@ namespace NeuralNetwork
     {
         public List<Neuron> Neurons { get; private set; } = new List<Neuron>();
         public ActivationType ActivationType { get; private set; }
-        public bool IsOutputLayer { get; private set; }
 
-
-        public NeuralLayer(
-            int neuronCount,
-            ActivationType activationType = ActivationType.Relu,
-            double? bias = null,
-            double? weight = null, 
-            bool isOutputLayer = false)
-        {
-            ActivationType = activationType;
-            IsOutputLayer = isOutputLayer;
-
-            for (int i = 0; i < neuronCount; i++)
-            {
-                Neurons.Add(new Neuron(ActivationType, bias, weight));
-            }
-        }
-
-        public NeuralLayer(int neuronCount, ActivationType activationType = ActivationType.Relu)
+        public NeuralLayer(int neuronCount, ActivationType activationType = ActivationType.Tanh)
         {
             ActivationType = activationType;
 
@@ -49,26 +32,73 @@ namespace NeuralNetwork
         {
             for (int i = 0; i < Neurons.Count; i++)
             {
-                // Set Gamma according to expected output values
-                Neurons[i].Gamma =
-                    (Neurons[i].Output.Value - expectedOutput[i]) *
-                        Activate.GetActivationDer(ActivationType, Neurons[i].Output.Value);
+                if (ActivationType == ActivationType.SoftMax)
+                {
+                    var valueDerivatives = Activate.SoftMaxDer(Neurons[i].OutputDendrites.Select(d => d.Signal.Value).ToArray());
+                    for (int d = 0; d < Neurons[i].OutputDendrites.Count; d++)
+                    {
+                        Neurons[i].OutputDendrites[d].Gamma = (Neurons[i].OutputDendrites[d].Signal.Value - expectedOutput[d]) * valueDerivatives[d];
+                        Neurons[i].OutputDendrites[d].UpdateWeightAndBias();
+                    }
+                }
+                else
+                {
+                    //foreach (var dendrite in Neurons[i].OutputDendrites)
+                    //{
+                    //    Neurons[i].Gamma += (dendrite.Signal.Value - expectedOutput[i]) * Activate.GetActivationDer(ActivationType, dendrite.Signal.Value);
+                    //}
 
-                Neurons[i].UpdateWeightsAndBiases();
+                    for (int d = 0; d < Neurons[i].OutputDendrites.Count; d++)
+                    {
+                        var signal = Neurons[i].OutputDendrites[d].Signal;
+                        var value = (signal.Value - expectedOutput[d]) * Activate.GetActivationDer(ActivationType, signal.Value);
+                        Neurons[i].OutputDendrites[d].Gamma = value;
+                        Neurons[i].OutputDendrites[d].UpdateWeightAndBias();
+                    }
+                }
+                
+
+                //var averageDendriteOutput = Neurons[i].OutputDendrites.Average(d => d.Signal.Value);
+
+                //Neurons[i].Gamma = 
+                //    (averageDendriteOutput - expectedOutput[i]) *
+                //        Activate.GetActivationDer(ActivationType, averageDendriteOutput);
+
+                //Neurons[i].UpdateWeightAndBias();
             }
         }
 
-        public void Learn(NeuralLayer propagateFromLayer)
+        public void Learn(NeuralLayer fromLayer)
         {
-            foreach (var neuron in Neurons)
+            for (int i=0; i < Neurons.Count; i++)
             {
-                foreach (var propFromNeuron in propagateFromLayer.Neurons)
+                var valueDerivatives = Activate.SoftMaxDer(Neurons[i].OutputDendrites.Select(d => d.Signal.Value).ToArray());
+                for (int d = 0; d < Neurons[i].OutputDendrites.Count; d++)
                 {
-                    neuron.Gamma += propFromNeuron.Gamma * neuron.Weight;
+                    var currentDendrite = Neurons[i].OutputDendrites[d];
+                    foreach (var fromNeuron in fromLayer.Neurons)
+                    {
+                        foreach (var fromDendrite in fromNeuron.InputDendrites)
+                        {
+                            currentDendrite.Gamma += fromDendrite.Gamma * currentDendrite.Weight;
+                        }
+                    }
+
+                    currentDendrite.Gamma *= ActivationType == ActivationType.SoftMax 
+                        ? valueDerivatives[d] 
+                        : Activate.GetActivationDer(ActivationType, currentDendrite.Signal.Value);
+
+                    currentDendrite.UpdateWeightAndBias();
                 }
 
-                neuron.Gamma *= Activate.GetActivationDer(ActivationType, neuron.Output.Value);
-                neuron.UpdateWeightsAndBiases();
+                //foreach (var fromNeuron in fromLayer.Neurons)
+                //{
+                //    Neurons[i].Gamma += fromNeuron.Gamma * Neurons[i].Weight;
+                //}
+
+                //var averageDendriteOutput = Neurons[i].OutputDendrites.Average(d => d.Signal.Value);
+                //Neurons[i].Gamma *= Activate.GetActivationDer(ActivationType, averageDendriteOutput);
+                //Neurons[i].UpdateWeightAndBias();
             }
         }
 
